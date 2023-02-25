@@ -24,7 +24,6 @@ def initialize():
         adminUrl = config["adminUrl"]
 
 
-
 def generateNonce():
     timeStamp = str(datetime.timestamp(datetime.now()))[0:10]
     randomNum = randint(1, 9999)
@@ -39,6 +38,7 @@ def encryptPwd(nonce):
 
 
 def login():
+    print("Login...")
     loginUrl = "{}/cgi-bin/luci/api/xqsystem/login".format(adminUrl)
     nonce = generateNonce()
     data = {
@@ -49,25 +49,43 @@ def login():
     }
     res = requests.post(url=loginUrl, data=data)
     if (res.status_code == 200):
-        return res.json()["token"]
+        token = res.json()["token"]
+        with open("./token", "w") as fp:
+            fp.write(token)
+        print("Login success, token saved")
+        return token
     else:
         print("LOGIN ERROR", res.status_code, res.text)
         return None
 
 
 def getAddress():
-    token = login()
-    url = "{}/cgi-bin/luci/;stok={}/api/xqnetwork/pppoe_status".format(adminUrl, token)
-    res = requests.get(url)
-    if (res.status_code == 200):
-        res = res.json()
-        
-    print(res["ip"]["address"])
+    with open("./token") as fp:
+        token = fp.readline()
+    print("Read token from cache:", token)
+    url = "{}/cgi-bin/luci/;stok={}/api/xqnetwork/pppoe_status".format(
+        adminUrl, token)
+    res = requests.get(url).json()
+    if (res["code"] == 0):
+        return res["ip"]["address"]
+    else:
+        return False
 
 
 def main():
     initialize()
-    getAddress()
+    address = getAddress()
+    if (not address):
+        print("Get IP fail, try login")
+        login()
+        address = getAddress()
+
+    print(address)
+        
+    
+    
+
+        
 
 
 if __name__ == "__main__":
