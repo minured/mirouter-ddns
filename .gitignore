@@ -1,3 +1,6 @@
 analy.md
 config.json
 login/
+.vscode/
+__pycache__/
+test.json

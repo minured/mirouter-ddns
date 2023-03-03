@@ -3,7 +3,7 @@ from datetime import datetime
 from random import randint
 import hashlib
 import json
-
+from save import saveIP
 
 # TODO 之后在页面读取
 deviceId = ""
@@ -65,7 +65,7 @@ def getAddress():
     print("Read token from cache:", token)
     url = "{}/cgi-bin/luci/;stok={}/api/xqnetwork/pppoe_status".format(
         adminUrl, token)
-    res = requests.get(url).json()
+    res = requests.get(url=url,timeout=3).json()
     if (res["code"] == 0):
         return res["ip"]["address"]
     else:
@@ -79,9 +79,8 @@ def main():
         print("Get IP fail, try login")
         login()
         address = getAddress()
-
     print(address)
-        
+    saveIP(address)
     
     
 
